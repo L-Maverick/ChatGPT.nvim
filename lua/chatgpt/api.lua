@@ -290,6 +290,26 @@ local function loadAzureConfigs()
   end)
 end
 
+local function loadDouBaoConfigs()
+  loadRequiredConfig("OPENAI_API_BASE", "OPENAI_API_BASE", "doubao_api_base_cmd", function(base)
+    Api.OPENAI_API_BASE = base
+    loadOptionalConfig(
+      "OPENAI_API_DouBao_VERSION",
+      "OPENAI_API_DouBao_VERSION",
+      "doubao_api_version_cmd",
+      function(version)
+        Api.OPENAI_API_DouBao_VERSION = version
+
+        if Api["OPENAI_API_BASE"] then
+          Api.COMPLETIONS_URL = Api.OPENAI_API_BASE .. Api.OPENAI_API_DouBao_VERSION .. "/chat/completions"
+          Api.CHAT_COMPLETIONS_URL = Api.OPENAI_API_BASE .. Api.OPENAI_API_DouBao_VERSION .. "/chat/completions"
+        end
+      end,
+      "/v3"
+    )
+  end)
+end
+
 local function startsWith(str, start)
   return string.sub(str, 1, string.len(start)) == start
 end
@@ -317,6 +337,9 @@ function Api.setup()
       if type == "azure" then
         loadAzureConfigs()
         Api.AUTHORIZATION_HEADER = "api-key: " .. Api.OPENAI_API_KEY
+      elseif type == "doubao" then
+        loadDouBaoConfigs()
+        Api.AUTHORIZATION_HEADER = "Authorization: Bearer " .. Api.OPENAI_API_KEY
       else
         Api.AUTHORIZATION_HEADER = "Authorization: Bearer " .. Api.OPENAI_API_KEY
       end
